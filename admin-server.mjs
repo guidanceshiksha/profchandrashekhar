@@ -241,17 +241,18 @@ async function handleApi(req, res, url) {
 
 function serveStatic(req, res, pathname) {
   let relativePath;
-  if (pathname === "/" || pathname === "/index.html") relativePath = "index.html";
-  else if (pathname === "/admin" || pathname === "/admin/") relativePath = "admin/index.html";
-  else if (/^\/admin\/(admin\.(?:js|css))$/.test(pathname)) relativePath = pathname.slice(1);
+  let fileRoot = path.join(root, "public");
+  if (pathname === "/admin" || pathname === "/admin/") { fileRoot = root; relativePath = "admin/index.html"; }
+  else if (/^\/admin\/(admin\.(?:js|css))$/.test(pathname)) { fileRoot = root; relativePath = pathname.slice(1); }
+  else if (pathname === "/" || pathname === "/index.html") relativePath = "index.html";
   else if (pathname === "/gallery.html") relativePath = "gallery.html";
   else if (/^\/blog(?:\/[a-z0-9-]+)?\/$/.test(pathname)) relativePath = `${pathname.slice(1)}index.html`;
   else if (/^\/blog\/[a-z0-9-]+\.html$/.test(pathname)) relativePath = pathname.slice(1);
   else if (/^\/assets\/(?:blog|gallery)\/[a-zA-Z0-9._-]+\.(?:jpe?g|png|webp)$/i.test(pathname)) relativePath = pathname.slice(1);
   else return sendJson(res, 404, { error: "Page not found." });
 
-  const fullPath = path.resolve(root, relativePath);
-  if (!fullPath.startsWith(`${root}${path.sep}`) || !fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) return sendJson(res, 404, { error: "Page not found." });
+  const fullPath = path.resolve(fileRoot, relativePath);
+  if (!fullPath.startsWith(`${fileRoot}${path.sep}`) || !fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) return sendJson(res, 404, { error: "Page not found." });
   const extension = path.extname(fullPath).toLowerCase();
   const mime = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp" }[extension];
   const inlineScripts = extension === ".html" ? [...fs.readFileSync(fullPath, "utf8").matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi)].map((match) => match[1]).filter((script) => script.trim()).map((script) => `'sha256-${crypto.createHash("sha256").update(script).digest("base64")}'`) : [];

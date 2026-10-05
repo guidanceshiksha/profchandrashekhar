@@ -9,7 +9,7 @@ npm install
 npm run build
 ```
 
-The build generates `index.html`, `gallery.html`, and the pages in `blog/`. These generated files are intentionally ignored by Git and can be recreated from the tracked source and assets.
+The build generates the complete static site in `public/`, including the homepage, gallery, blog pages, and image assets. This is the Vercel output directory; generated files are intentionally ignored by Git and can be recreated from tracked source and assets.
 
 ## Blog admin
 
@@ -20,6 +20,6 @@ $env:ADMIN_PASSWORD = "use-a-strong-password-here"
 npm run admin
 ```
 
-Open `http://127.0.0.1:3001/admin/`. Publishing a post rebuilds the static pages. The admin service binds to localhost by default.
+Open `http://127.0.0.1:3001/admin/`. Publishing a post rebuilds the static pages in `public/`. The admin service binds to localhost by default.
 
 For public deployment, use a Node.js host with HTTPS and a reverse proxy. Do not expose the admin service over plain HTTP or use the temporary development password.

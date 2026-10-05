@@ -1,6 +1,15 @@
 import fs from "fs";
 import { execSync } from "child_process";
 import { BLOG_POSTS } from "./src/blogData.mjs";
+fs.rmSync("public", { recursive: true, force: true });
+fs.mkdirSync("public/assets", { recursive: true });
+if (fs.existsSync("assets/blog")) fs.cpSync("assets/blog", "public/assets/blog", { recursive: true });
+const shareImageSource = "assets/gallery/dd61.png";
+const shareImageUrl = "https://prof-chandrashekhar.com/assets/gallery/dd61.png";
+if (fs.existsSync(shareImageSource)) {
+  fs.mkdirSync("public/assets/gallery", { recursive: true });
+  fs.copyFileSync(shareImageSource, "public/assets/gallery/dd61.png");
+}
 execSync(`npx esbuild src/main.jsx --bundle --minify --format=iife --jsx=automatic --define:process.env.NODE_ENV='"production"' --outdir=dist --loader:.css=css`, { stdio: "inherit" });
 const css = fs.readFileSync("dist/main.css", "utf8");
 const js = fs.readFileSync("dist/main.js", "utf8").replace(/<\/script/gi, "<\\/script");
@@ -52,7 +61,7 @@ const html = `<!doctype html>
 <meta name="author" content="Prof. Dr. Chandra Shekhar">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="canonical" href="https://prof-chandrashekhar.com/">
-<meta property="og:image" content="assets/gallery/dd61.jpg">
+<meta property="og:image" content="${shareImageUrl}">
 <meta property="og:image:alt" content="Portrait of Prof. Dr. Chandra Shekhar">
 <meta name="twitter:card" content="summary_large_image">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline'; connect-src 'self'; frame-src https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self' https://wa.me; upgrade-insecure-requests;">
@@ -85,7 +94,7 @@ const galleryPage = `<!doctype html>
 <meta name="author" content="Prof. Dr. Chandra Shekhar">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="canonical" href="https://prof-chandrashekhar.com/gallery.html">
-<meta property="og:image" content="assets/gallery/dd61.jpg">
+<meta property="og:image" content="${shareImageUrl}">
 <meta property="og:image:alt" content="Photo gallery of Prof. Dr. Chandra Shekhar">
 <meta name="twitter:card" content="summary_large_image">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;">
@@ -133,7 +142,7 @@ const blogShell = `<!doctype html>
 <meta name="description" content="Blog insights on education, research, admissions and career guidance by Prof. Dr. Chandra Shekhar.">
 <meta name="theme-color" content="#0f1733">
 <link rel="canonical" href="https://prof-chandrashekhar.com/blog/">
-<meta property="og:image" content="../assets/gallery/dd61.jpg">
+<meta property="og:image" content="${shareImageUrl}">
 <meta property="og:image:alt" content="Prof. Dr. Chandra Shekhar blog cover">
 <title>Blog | Prof. Dr. Chandra Shekhar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -187,8 +196,8 @@ const blogShell = `<!doctype html>
 </html>
 `;
 
-fs.mkdirSync("blog", { recursive: true });
-fs.writeFileSync("blog/index.html", blogShell);
+fs.mkdirSync("public/blog", { recursive: true });
+fs.writeFileSync("public/blog/index.html", blogShell);
 for (const post of publicPosts) {
   const postTitle = escapeHtml(post.seoTitle || post.title);
   const postDescription = escapeHtml(post.seoDescription || post.excerpt);
@@ -242,13 +251,10 @@ for (const post of publicPosts) {
 </body>
 </html>
 `;
-  fs.writeFileSync(`blog/${post.slug}.html`, postHtml);
+  fs.writeFileSync(`public/blog/${post.slug}.html`, postHtml);
 }
-for (const file of fs.readdirSync("blog")) {
-  if (file.endsWith(".html") && file !== "index.html" && !publicPosts.some((post) => `${post.slug}.html` === file)) fs.unlinkSync(`blog/${file}`);
-}
-fs.writeFileSync("index.html", html);
-fs.writeFileSync("gallery.html", galleryPage);
-console.log("index.html", (html.length / 1024).toFixed(0) + " KB", photo ? "(with photo)" : "(no photo)");
-console.log("gallery.html", (galleryPage.length / 1024).toFixed(0) + " KB");
-console.log("blog/index.html", (blogShell.length / 1024).toFixed(0) + " KB");
+fs.writeFileSync("public/index.html", html);
+fs.writeFileSync("public/gallery.html", galleryPage);
+console.log("public/index.html", (html.length / 1024).toFixed(0) + " KB", photo ? "(with photo)" : "(no photo)");
+console.log("public/gallery.html", (galleryPage.length / 1024).toFixed(0) + " KB");
+console.log("public/blog/index.html", (blogShell.length / 1024).toFixed(0) + " KB");
