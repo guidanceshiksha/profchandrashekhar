@@ -18,7 +18,6 @@ const STATS = [
   { n: 10000, l: "Students mentored" },
   { n: 20, l: "Research papers published" },
   { n: 5, l: "National awards received" },
-  { n: 18, l: "National and international conferences attended" },
 ];
 const ROLES = [
   { k: "Educator", t: "Professor & In-Charge (Admissions)", d: "Bharatiya Vidya Bhavan College (BVBC), GGSIP University, Delhi." },
