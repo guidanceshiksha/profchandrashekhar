@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+.env.*
+index.html
+gallery.html
+/blog/*.html
