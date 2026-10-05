@@ -4,12 +4,9 @@ import { BLOG_POSTS } from "./src/blogData.mjs";
 fs.rmSync("public", { recursive: true, force: true });
 fs.mkdirSync("public/assets", { recursive: true });
 if (fs.existsSync("assets/blog")) fs.cpSync("assets/blog", "public/assets/blog", { recursive: true });
+if (fs.existsSync("assets/gallery")) fs.cpSync("assets/gallery", "public/assets/gallery", { recursive: true });
 const shareImageSource = "assets/gallery/dd61.png";
 const shareImageUrl = "https://prof-chandrashekhar.com/assets/gallery/dd61.png";
-if (fs.existsSync(shareImageSource)) {
-  fs.mkdirSync("public/assets/gallery", { recursive: true });
-  fs.copyFileSync(shareImageSource, "public/assets/gallery/dd61.png");
-}
 execSync(`npx esbuild src/main.jsx --bundle --minify --format=iife --jsx=automatic --define:process.env.NODE_ENV='"production"' --outdir=dist --loader:.css=css`, { stdio: "inherit" });
 const css = fs.readFileSync("dist/main.css", "utf8");
 const js = fs.readFileSync("dist/main.js", "utf8").replace(/<\/script/gi, "<\\/script");
@@ -31,8 +28,7 @@ for (const f of [
   "assets/photo.png",
 ]) {
   if (fs.existsSync(f)) {
-    const mime = f.toLowerCase().endsWith("png") ? "image/png" : f.toLowerCase().endsWith("webp") ? "image/webp" : "image/jpeg";
-    photo = `<script>window.__PHOTO__="data:${mime};base64,${fs.readFileSync(f).toString("base64")}";</script>\n`;
+    photo = `<script>window.__PHOTO__="/${f.replace(/\\/g, "/")}";</script>\n`;
     break;
   }
 }
@@ -41,13 +37,10 @@ let offBeatThumbnail = "";
 if (fs.existsSync("assets/gallery")) {
   const files = fs.readdirSync("assets/gallery").filter((f) => /\.(jpe?g|png|webp)$/i.test(f)).sort();
   if (files.length) {
-    const arr = files.map((f) => `data:image/${f.toLowerCase().endsWith("png") ? "png" : f.toLowerCase().endsWith("webp") ? "webp" : "jpeg"};base64,` + fs.readFileSync("assets/gallery/" + f).toString("base64"));
+    const arr = files.map((f) => `/assets/gallery/${encodeURIComponent(f)}`);
     gallery = `<script>window.__GALLERY__=${JSON.stringify(arr)};</script>\n`;
     const offBeatFile = files.find((f) => /off\s*beat.*(carrer|career)|off\s*beat.*thumb/i.test(f));
-    if (offBeatFile) {
-      const ext = offBeatFile.toLowerCase().endsWith("png") ? "png" : offBeatFile.toLowerCase().endsWith("webp") ? "webp" : "jpeg";
-      offBeatThumbnail = `data:image/${ext};base64,${fs.readFileSync("assets/gallery/" + offBeatFile).toString("base64")}`;
-    }
+    if (offBeatFile) offBeatThumbnail = `/assets/gallery/${encodeURIComponent(offBeatFile)}`;
   }
 }
 const html = `<!doctype html>
@@ -74,6 +67,7 @@ const html = `<!doctype html>
 <title>Prof. Dr. Chandra Shekhar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="image" href="/assets/gallery/dd61.png" fetchpriority="high">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>${css}</style>
 </head>
@@ -127,7 +121,7 @@ const galleryPage = `<!doctype html>
     <div class="gallery-page-grid">
       ${(() => {
         const files = fs.existsSync("assets/gallery") ? fs.readdirSync("assets/gallery").filter((f) => /\.(jpe?g|png|webp)$/i.test(f)).sort() : [];
-        return files.map((f) => ` <img src="data:image/${f.toLowerCase().endsWith("png") ? "png" : f.toLowerCase().endsWith("webp") ? "webp" : "jpeg"};base64,${fs.readFileSync("assets/gallery/" + f).toString("base64")}" alt="${f}" loading="lazy" />`).join("\n");
+        return files.map((f) => ` <img src="/assets/gallery/${encodeURIComponent(f)}" alt="${escapeHtml(f)}" loading="lazy" decoding="async" />`).join("\n");
       })()}
     </div>
   </div>
@@ -255,6 +249,6 @@ for (const post of publicPosts) {
 }
 fs.writeFileSync("public/index.html", html);
 fs.writeFileSync("public/gallery.html", galleryPage);
-console.log("public/index.html", (html.length / 1024).toFixed(0) + " KB", photo ? "(with photo)" : "(no photo)");
-console.log("public/gallery.html", (galleryPage.length / 1024).toFixed(0) + " KB");
+console.log("public/index.html", (Buffer.byteLength(html) / 1024).toFixed(0) + " KB", photo ? "(with photo)" : "(no photo)");
+console.log("public/gallery.html", (Buffer.byteLength(galleryPage) / 1024).toFixed(0) + " KB");
 console.log("public/blog/index.html", (blogShell.length / 1024).toFixed(0) + " KB");

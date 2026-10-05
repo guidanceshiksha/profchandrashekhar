@@ -248,7 +248,7 @@ function serveStatic(req, res, pathname) {
   else if (pathname === "/gallery.html") relativePath = "gallery.html";
   else if (/^\/blog(?:\/[a-z0-9-]+)?\/$/.test(pathname)) relativePath = `${pathname.slice(1)}index.html`;
   else if (/^\/blog\/[a-z0-9-]+\.html$/.test(pathname)) relativePath = pathname.slice(1);
-  else if (/^\/assets\/(?:blog|gallery)\/[a-zA-Z0-9._-]+\.(?:jpe?g|png|webp)$/i.test(pathname)) relativePath = pathname.slice(1);
+  else if (/^\/assets\/(?:blog|gallery)\/[a-zA-Z0-9._ -]+\.(?:jpe?g|png|webp)$/i.test(pathname)) relativePath = pathname.slice(1);
   else return sendJson(res, 404, { error: "Page not found." });
 
   const fullPath = path.resolve(fileRoot, relativePath);
